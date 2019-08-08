@@ -1,0 +1,227 @@
+" automatic reload of .vimrc file
+autocmd! bufwritepost .vimrc source %
+
+syntax enable
+set encoding=utf-8
+set shell=/bin/bash
+set laststatus=2 "show statusbar
+set tabstop=8 softtabstop=0 expandtab shiftwidth=4 smarttab
+set nocompatible
+set wrap
+set showcmd " dispaly an incomplete command.
+set tw=80 " width of document (used by gd)
+set fo-=t " automatically wrap text when typing
+filetype off
+
+" Disable stupid backup and swap files - they trigger too many events
+" for file system watchers
+set nobackup
+set nowritebackup
+set noswapfile
+
+
+" Useful settings
+set history=700
+set undolevels=700
+
+set rtp+=~/.vim/bundle/Vundle.vim " set the runtime path to include Vundle and initialize
+call vundle#begin()
+
+" let Vundle manage Vundle
+
+Plugin 'Vundlevim/Vundle.vim'
+Plugin 'vim-airline/vim-airline'
+Plugin 'scrooloose/nerdtree'
+Plugin 'surround.vim'
+Plugin 'tpope/vim-fugitive'
+Plugin 'ctrlpvim/ctrlp.vim'
+Plugin 'Valloric/MatchTagAlways'
+Plugin 'Yggdroot/indentLine'
+Plugin 'altercation/vim-colors-solarized'
+Plugin 'junegunn/goyo.vim'
+Plugin 'lervag/vimtex'
+Plugin 'rstacruz/sparkup', {'rtp': 'vim/'}
+Plugin 'ycm-core/YouCompleteMe'
+Plugin 'honza/vim-snippets'
+Plugin 'davidhalter/jedi-vim'
+"Plugin 'kien/ctrlp.vim'
+" git submodule add https://github.com/kien/ctrlp.vim.git bundle/ctrlp
+Plugin 'xuhdev/vim-latex-live-preview'
+Plugin 'vim-latex/vim-latex'
+Plugin 'coot/atp_vim'
+
+
+" Settings for ctrlp
+let g:ctrlp_max_height = 30
+set wildignore+=*.pyc
+set wildignore+=*_build/*
+set wildignore+=*/coverage/*
+
+call vundle#end()            " required
+filetype plugin indent on    " required
+
+let g:solarized_termcolors=256
+set background=dark
+colorscheme solarized
+
+set number relativenumber " show line numbers
+set incsearch " search pattern when halfway typing it. 
+set hlsearch " highlight matches 
+set ignorecase
+set colorcolumn=80
+highlight ColorColumn ctermbg=110
+
+" load up the nerd tree
+autocmd vimenter * NERDTree
+
+
+" Mapping by myself
+let mapleader = " "
+map <Leader>n :NERDTree<CR>
+map <Leader>nc :NERDTreeClose<CR> 
+
+
+" move nerdtree to the right
+let g:NERDTreeWinPos = "right"
+" " move to the first buffer
+autocmd VimEnter * wincmd p
+
+set path+=**
+
+"Display all matching files when we tab complete
+set wildmenu
+
+"Read an empty HTML template and move cursor to title
+nnoremap ,html :-1read $HOME/.vim/.skeleton.html<CR>6jwf>a
+
+
+:imap jj <Esc>
+
+set viminfo='1000,f1,<500
+
+
+"-----------------------------------------------------------
+"               Python
+"----------------------------------------------------------
+
+autocmd FileType python nnoremap <Leader>= :0,$!yapf<CR>
+autocmd FileType python nnoremap <Leader>i :!isort %<CR><CR>
+set encoding=utf-8
+
+
+let b:ale_linters = ['flake8']
+let b:ale_fixers = [
+\   'remove_trailing_lines',
+\   'isort',
+\   'ale#fixers#generic_python#BreakUpLongLines',
+\   'yapf',
+\]
+
+nnoremap <buffer> <silent> <Leader>= :ALEFix<CR>
+
+let g:ale_fix_on_save = 1
+
+" Quick run via <F5>
+nnoremap <F5> :call <SID>compile_and_run()<CR>
+
+function! s:compile_and_run()
+    exec 'w'
+    if &filetype == 'c'
+        exec "AsyncRun! gcc % -o %<; time ./%<"
+    elseif &filetype == 'cpp'
+       exec "AsyncRun! g++ -std=c++11 % -o %<; time ./%<"
+    elseif &filetype == 'java'
+       exec "AsyncRun! javac %; time java %<"
+    elseif &filetype == 'sh'
+       exec "AsyncRun! time bash %"
+    elseif &filetype == 'python'
+       exec "AsyncRun! time python %"
+    endif
+endfunction
+
+" Deprecated:
+" augroup SPACEVIM_ASYNCRUN
+"     autocmd!
+"    " Automatically open the quickfix window
+"     autocmd User AsyncRunStart call asyncrun#quickfix_toggle(15, 1)
+" augroup END
+"
+" asyncrun now has an option for opening quickfix automatically
+let g:asyncrun_open = 15
+
+
+
+"------------------------------------------------------------
+" LATEX SETUP
+"------------------------------------------------------------
+let g:vimtex_enabled=1
+let g:vimtex_complete_recursive_bib=1
+"let g:vimtex_fold_manual=1
+let g:vimtex_fold_enabled =1
+"autocmd BufEnter *.tex set foldmethod=expr
+"autocmd BufEnter *.tex set foldexpr=vimtex#fold#level(v:lnum)
+"autocmd BufEnter *.tex set foldtext=vimtex#fold#text()
+let g:Tex_FormatDependency_pdf = 'dvi,ps,pdf'
+let g:Tex_CompileRule_dvi = 'latex --interaction=nonstopmode $*'
+let g:Tex_CompileRule_pdf = 'latex --interaction=nonstopmode $*'
+let g:Tex_CompileRule_ps = 'dvips -Ppdf -o $*.ps $*.dvi'
+let g:Tex_CompileRule_pdf = 'ps2pdf $*.ps'
+let g:Tex_MultipleCompileFormats = 'pdf'
+let g:Tex_DefaultTargetFormat = 'pdf'
+
+" View_rule_format 
+let g:Tex_ViewRuleComplete_pdf = 'pdf'
+nnoremap <buffer> <Leader>e :call EvinceNearestLabel()<CR>
+command! -nargs=1 -complete=tag Pdf call LoadEvinceByLabel("<args>")
+
+let g:vimtex_compiler_latexmk = {
+    \ 'backend' : 'jobs',
+    \ 'background' : 1,
+    \ 'build_dir' : '',
+    \ 'callback' : 1,
+    \ 'continuous' : 1,
+    \ 'executable' : 'latexmk',
+    \ 'options' : [
+    \   '-shell-escape',
+    \   '-verbose',
+    \   '-file-line-error',
+    \   '-synctex=1',
+    \   '-interaction=nonstopmode',
+    \ ],
+    \}
+
+" vim-latex-live-preview settings
+autocmd Filetype tex setl updatetime=1
+let g:livepreview_previewer = 'open -a Preview'
+
+"Load PDF to the page containing label
+function! LoadEvinceByLabel(l)
+  for f in split(glob("*.aux"))
+    let label = system('grep "^.newlabel{' . a:l . '" ' . f)
+    let page = matchstr(label, '.\{}{\zs.*\ze}}')
+    if ! empty(page)
+      call OpenPDF(substitute(f, "aux$", "pdf", ""), page)
+      return
+    endif
+  endfor
+endfunction
+
+"Load PDF to the page containing the nearest previous label to the cursor
+function! EvinceNearestLabel()
+  let line = search("\\label{", "bnW")
+  if line > 0
+    let m = matchstr(getline(line), '\\label{\zs[^}]*\ze}')
+    if empty(m)
+      echomsg "No label between here and start of file"
+    else
+      call LoadEvinceByLabel(m)
+    endif
+  endif
+endfunction
+
+nnoremap <buffer> <LocalLeader>e :call EvinceNearestLabel()<CR>
+command! -nargs=1 -complete=tag Pdf call LoadEvinceByLabel("<args>")
+
+function! OpenPDF(file,page)
+  exec 'silent ! okular --page ' . a:page . ' --unique ' . a:file . ' > /dev/null 2>&1 &'
+endfunction
